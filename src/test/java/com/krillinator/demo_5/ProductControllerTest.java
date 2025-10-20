@@ -14,6 +14,7 @@ import org.springframework.test.web.reactive.server.WebTestClient;
 
 import java.math.BigDecimal;
 
+
 @Import(TestcontainersConfiguration.class)
 @SpringBootTest(webEnvironment = SpringBootTest.WebEnvironment.RANDOM_PORT)
 @AutoConfigureWebTestClient
@@ -32,7 +33,7 @@ public class ProductControllerTest {
 
     @Test
     void shouldDeleteProductSuccessfully() {
-        // skapar produkt som ska raderas
+        // Arrange: create product to delete
         ProductValidatorDTO dto = new ProductValidatorDTO(
                 "Mango",
                 "Sweet tropical fruit",
@@ -40,7 +41,7 @@ public class ProductControllerTest {
                 false
         );
 
-        // Skapa produkten via API:et
+        // Save To Database
         ProductResponseDTO created = webTestClient.post()
                 .uri("/api/v1/product/create")
                 .bodyValue(dto)
@@ -52,15 +53,17 @@ public class ProductControllerTest {
 
         Assertions.assertNotNull(created);
         Assertions.assertNotNull(created.id());
+
         Long id = created.id();
 
         Product product = productRepository.findById(id).block();
-        System.out.println("Skapad produkt: " + product);
+        System.out.println(product);
 
-        // Act & Assert - radera produkten och förvänta status 204
+        // Act & Assert: delete it and expect 204
         webTestClient.delete()
                 .uri("/api/v1/product/delete/{id}", id)
                 .exchange()
                 .expectStatus().isNoContent();
     }
+
 }

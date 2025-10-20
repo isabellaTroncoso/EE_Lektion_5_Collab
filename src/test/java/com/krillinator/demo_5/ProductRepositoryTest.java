@@ -1,5 +1,4 @@
 package com.krillinator.demo_5;
-
 import com.krillinator.demo_5.product.Product;
 import com.krillinator.demo_5.product.ProductRepository;
 import org.junit.jupiter.api.Assertions;
@@ -17,6 +16,7 @@ import java.util.concurrent.TimeUnit;
 @Import(TestcontainersConfiguration.class)
 @SpringBootTest
 public class ProductRepositoryTest {
+
     @Autowired
     private ProductRepository productRepository;
 
@@ -27,6 +27,7 @@ public class ProductRepositoryTest {
 
     @Test
     @Timeout(value = 5, unit = TimeUnit.SECONDS)
+        // Clarity
     void shouldSaveAndRetrieveProduct() {
         Product product_apples = new Product(
                 null,
@@ -37,18 +38,41 @@ public class ProductRepositoryTest {
                 null
         );
 
-        // Spara produkten
-        Product savedProduct = productRepository.save(product_apples).block();
+        Product savedproduct = productRepository.save(product_apples).block();
 
-        // Verifiera asynkront med StepVerifier
-        StepVerifier.create(productRepository.findById(savedProduct.id()))
+        Assertions.assertNotNull(savedproduct);
+
+        // Async Controlled Environment
+        StepVerifier.create(
+                        productRepository.findById(savedproduct.id())
+                )
                 .expectNextMatches(product -> product.name().equals("Apples"))
                 .verifyComplete();
 
-        // Alternativt med JUnit Assertions
-        StepVerifier.create(productRepository.findById(savedProduct.id()))
+        /* --Code Example-- Same as above code: Using JUnit assertions instead
+
+            StepVerifier.create(
+                productRepository.findById(savedproduct.id())
+                )
                 .assertNext(product -> Assertions.assertEquals("Apples", product.name()))
                 .verifyComplete();
-    }
 
+        */
+
+        /* You can use .flatMap to chain a response instead of using .block()
+         *   A bit Harder to debug
+         *   But quicker to write and is async
+         * */
+
+        /* --Code Example--
+        StepVerifier.create(
+                productRepository.save(product_apples)
+                        .flatMap(product -> productRepository.findById(product.id())
+                        )
+        )
+                .expectNextMatches(product -> product.name().equals("Apples"))
+                .verifyComplete();
+         */
+
+    }
 }
